@@ -42,7 +42,6 @@ class Command(BaseCommand):
             executable_name,
             # -v -v ...
             *verbosity_args,
-            # django_dramatiq.tasks app1.tasks app2.tasks ...
             *tasks_modules,
             "--path", *path,
         ]
@@ -65,14 +64,10 @@ class Command(BaseCommand):
         ignored_modules = set(getattr(settings, "DRAMATIQ_IGNORED_MODULES", []))
         app_configs = []
         for conf in apps.get_app_configs():
-            # Always find our own tasks, regardless of the configured module names.
-            if conf.name == "django_dramatiq":
-                app_configs.append((conf, "tasks"))
-            else:
-                for task_module in task_module_names:
-                    if module_has_submodule(conf.module, task_module):
-                        app_configs.append((conf, task_module))
-        tasks_modules = ["django_dramatiq.setup"]
+            for task_module in task_module_names:
+                if module_has_submodule(conf.module, task_module):
+                    app_configs.append((conf, task_module))
+        tasks_modules = ["django_periodiq.setup"]
 
         def is_ignored_module(module_name):
             if not ignored_modules:
